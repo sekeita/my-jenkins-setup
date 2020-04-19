@@ -1,0 +1,168 @@
+---
+jenkins:
+  systemMessage: "Powered automagically by Groovy and Configuration-as-Code Plugin\n\n"
+  numExecutors: 5
+
+  crumbIssuer: 
+    standard:
+      excludeClientIPFromCrumb: false
+
+  remotingSecurity:
+    enabled: true
+
+  globalNodeProperties:
+    - envVars:
+        env:
+          - key: "DEVTAIL_DEBUG"
+            value: "True"
+
+  authorizationStrategy:
+    globalMatrix:
+      grantedPermissions:
+        - "Overall/Administer:devtail*Admin"
+        - "Overall/Administer:admin"
+
+  securityRealm:
+    github:
+      githubWebUri: "https://github.com"
+      githubApiUri: "https://api.github.com"
+      clientID: "${jenkins-tokens/github-oauth-client-id}"
+      clientSecret: "${jenkins-tokens/github-oauth-client-secret}"
+      oauthScopes: "read:org,user:email"
+
+  nodes:
+    - permanent:
+        labelString: "docker"
+        name: "docker-agent-1"
+        nodeName: "docker-agent-1"
+        numExecutors: 2
+        remoteFS: "/home/ubuntu"
+        launcher:
+          setupSlaveLauncher:
+            startScript: "java -jar /var/jenkins_home/war/WEB-INF/jenkins-cli.jar -s http://localhost:8080 -ssh -user admin -i /var/jenkins_home/jenkins-ssh-keys/ssh-agent-access-key build 'Admin/AWSAgentBootstrap' -p agentID='0' -s"
+            stopScript: "java -jar /var/jenkins_home/war/WEB-INF/jenkins-cli.jar -s http://localhost:8080 -ssh -user admin -i /var/jenkins_home/jenkins-ssh-keys/ssh-agent-access-key build 'Admin/AWSAgentDestroy' -p agentID='0' -s"
+            launcher:
+              sSHLauncher:
+                credentialsId: "ssh-agent-access-key"
+                host: "18.195.157.53"
+                workDir: "/home/ubuntu"
+                sshHostKeyVerificationStrategy: "nonVerifyingKeyVerificationStrategy"
+        retentionStrategy:
+          demand: 
+            idleDelay: 1000
+            inDemandDelay: 0
+    - permanent:
+        labelString: "docker"
+        name: "docker-agent-2"
+        nodeName: "docker-agent-2"
+        numExecutors: 2
+        remoteFS: "/home/ubuntu"
+        launcher:
+          setupSlaveLauncher:
+            startScript: "java -jar /var/jenkins_home/war/WEB-INF/jenkins-cli.jar -s http://localhost:8080 -ssh -user admin -i /var/jenkins_home/jenkins-ssh-keys/ssh-agent-access-key build 'Admin/AWSAgentBootstrap' -p agentID='1' -s"
+            stopScript: "java -jar /var/jenkins_home/war/WEB-INF/jenkins-cli.jar -s http://localhost:8080 -ssh -user admin -i /var/jenkins_home/jenkins-ssh-keys/ssh-agent-access-key build 'Admin/AWSAgentDestroy' -p agentID='1' -s"
+            launcher:
+              sSHLauncher:
+                credentialsId: "ssh-agent-access-key"
+                host: "3.122.182.67"
+                workDir: "/home/ubuntu"
+                sshHostKeyVerificationStrategy: "nonVerifyingKeyVerificationStrategy"
+        retentionStrategy:
+          demand: 
+            idleDelay: 1000
+            inDemandDelay: 0
+
+security:
+  globalJobDslSecurityConfiguration:
+    useScriptSecurity: false
+  sSHD:
+    port: 6666
+
+credentials:
+  system:
+    domainCredentials:
+      - credentials:
+          #######
+          # User Auth
+          #######
+          - usernamePassword:
+              scope: "GLOBAL"
+              id: "github-ci-user"
+              description: "Github CI User Credentials"
+              username: "${jenkins-basic-auth-credentials/github-ci-user}"
+              password: "${jenkins-basic-auth-credentials/github-ci-password}"
+          ########
+          # Tokens
+          ########
+          - string:
+              scope: "GLOBAL"
+              id: "slack-token"
+              description: "Slack Access Token"
+              secret: "${jenkins-tokens/slack-token}"
+          - string:
+              scope: "GLOBAL"
+              id: "github-ci-token"
+              description: "Github CI User Token"
+              secret: "${jenkins-tokens/github-ci-token}"
+          - string:
+              scope: "GLOBAL"
+              id: "github-oauth-client-id"
+              description: "Github OAuth Client ID"
+              secret: "${jenkins-tokens/github-oauth-client-id}"
+          - string:
+              scope: "GLOBAL"
+              id: "github-oauth-client-secret"
+              description: "Github OAuth Client Secret"
+              secret: "${jenkins-tokens/github-oauth-client-secret}"
+          ########
+          # SSH Keys
+          ########
+          - basicSSHUserPrivateKey:
+              scope: "GLOBAL"
+              id: "deploy-key-shared-library"
+              username: "root"
+              passphrase: ""
+              description: "Deploy key for global shared library"
+              privateKeySource:
+                directEntry:
+                  privateKey: "${jenkins-ssh-keys/deploy-key-shared-library}"
+          - basicSSHUserPrivateKey:
+              scope: "GLOBAL"
+              id: "ssh-agent-access-key"
+              username: "ubuntu"
+              passphrase: ""
+              description: "SSH key to access agents"
+              privateKeySource:
+                directEntry:
+                  privateKey: "${jenkins-ssh-keys/ssh-agent-access-key}"
+
+unclassified:
+  location:
+    url: "http://192.168.99.100:30001/"
+    adminAddress: "admin@devtail.io"
+
+  globalLibraries:
+    libraries:
+      - name: "devtail-ci-lib"
+        retriever:
+          modernSCM:
+            scm:
+              git:
+                remote: "git@github.com:devtail/jenkins-as-code.git"
+                credentialsId: "deploy-key-shared-library"
+
+  simple-theme-plugin:
+    elements:
+      - cssUrl: 
+          url: "https://fishi.devtail.io/content-images/jenkins-devtail-theme.css"
+
+  slackNotifier:
+    teamDomain: "devtail"
+    baseUrl: "https://devtail.slack.com/services/hooks/jenkins-ci/"
+    tokenCredentialId: "slack-token"
+
+  githubpluginconfig:
+    configs:
+    - name: "Github"
+      credentialsId: "github-ci-token"
+      manageHooks: true
