@@ -138,7 +138,7 @@ credentials:
 
 unclassified:
   location:
-    url: "http://192.168.99.100:30001/"
+    url: "http://192.168.247.129:30001/"
     adminAddress: "nasubafils@gmail.com"
 
   globalLibraries:
