@@ -10,6 +10,6 @@ import jenkins.model.Jenkins
 
 def slack = Jenkins.instance.getExtensionList('jenkins.plugins.slack.SlackNotifier$DescriptorImpl')[0]
 slack.tokenCredentialId = 'slack-token'
-slack.teamDomain = 'devtail'
-slack.baseUrl = 'https://devtail.slack.com/services/hooks/jenkins-ci/'
+slack.teamDomain = 'nansugn'
+slack.baseUrl = 'https://nansugn.slack.com/services/hooks/jenkins-ci/'
 slack.save()

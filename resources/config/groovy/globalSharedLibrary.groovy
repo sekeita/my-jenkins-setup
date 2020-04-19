@@ -17,10 +17,10 @@ import org.jenkinsci.plugins.workflow.libs.SCMSourceRetriever
 
 List libraries = [] as ArrayList
 
-def remote = 'git@github.com:devtail/jenkins-as-code.git'
+def remote = 'git@github.com:sekeita/my-jenkins-setup.git'
 def credentialsId = 'deploy-key-shared-library'
 
-name = 'devtail-ci'
+name = 'sekeita-ci'
 defaultVersion = 'master'
 
 if (remote != null) {
